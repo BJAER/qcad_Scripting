@@ -1,0 +1,50 @@
+[
+  {
+    "id": "quality_manual",
+    "title": "Qualitätshandbuch",
+    "type": "url",
+    "category": "Qualität",
+    "url": "https://example.com/qualitaetshandbuch",
+    "tags": ["qualität", "handbuch", "qm"]
+  },
+  {
+    "id": "wa_zeichnung_2d",
+    "title": "Arbeitsanweisung: 2D-Zeichnung erstellen",
+    "type": "url",
+    "category": "CAD",
+    "url": "https://example.com/anweisungen/zeichnung-2d",
+    "tags": ["2d", "qcad", "zeichnung", "dxf"]
+  },
+  {
+    "id": "wa_modell_3d",
+    "title": "Arbeitsanweisung: 3D-Modell erstellen",
+    "type": "url",
+    "category": "CAD",
+    "url": "https://example.com/anweisungen/modell-3d",
+    "tags": ["3d", "freecad", "modell", "step"]
+  },
+  {
+    "id": "wa_dxf_export",
+    "title": "Arbeitsanweisung: DXF-Export",
+    "type": "url",
+    "category": "CAD",
+    "url": "https://example.com/anweisungen/dxf-export",
+    "tags": ["dxf", "export", "qcad"]
+  },
+  {
+    "id": "wa_step_export",
+    "title": "Arbeitsanweisung: STEP-Export",
+    "type": "url",
+    "category": "CAD",
+    "url": "https://example.com/anweisungen/step-export",
+    "tags": ["step", "export", "freecad"]
+  },
+  {
+    "id": "wa_projekt_anlegen",
+    "title": "Arbeitsanweisung: Neues Projekt anlegen",
+    "type": "url",
+    "category": "Projekte",
+    "url": "https://example.com/anweisungen/projekt-anlegen",
+    "tags": ["projekt", "neu", "struktur"]
+  }
+]
