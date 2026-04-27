@@ -1,0 +1,231 @@
+:root {
+  --color-primary: #1f2937;
+  --color-primary-light: #374151;
+  --color-accent: #2563eb;
+  --color-accent-hover: #1d4ed8;
+  --color-text-light: #f9fafb;
+  --color-text-dark: #111827;
+  --color-text-muted: #9ca3af;
+  --color-error: #dc2626;
+  --color-warning: #d97706;
+  --color-success: #16a34a;
+  --color-border: #374151;
+  --color-surface: #1f2937;
+  --color-surface-raised: #2d3748;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  background-color: var(--color-primary);
+  color: var(--color-text-light);
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: var(--color-primary);
+}
+
+/* Header */
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background-color: var(--color-primary-light);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.app-header img {
+  width: 36px;
+  height: 36px;
+}
+
+.app-header h1 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text-light);
+  letter-spacing: 0.01em;
+}
+
+/* Hauptinhalt */
+.app-main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 32px;
+}
+
+/* Startscreen – Button-Raster */
+.start-screen {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.start-screen h2 {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 20px;
+}
+
+.button-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* Hub-Button */
+.hub-button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 20px 22px;
+  background-color: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  color: var(--color-text-light);
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s, transform 0.1s;
+  min-height: 88px;
+  text-align: left;
+  font-family: inherit;
+}
+
+.hub-button:hover:not(:disabled) {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent-hover);
+  transform: translateY(-1px);
+}
+
+.hub-button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.hub-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.hub-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.hub-button .button-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.hub-button .button-label {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.hub-button .button-hint {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.hub-button:hover:not(:disabled) .button-hint {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* Statusleiste */
+.status-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 20px;
+  background-color: var(--color-primary-light);
+  border-top: 1px solid var(--color-border);
+  font-size: 13px;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  min-height: 36px;
+}
+
+.status-bar.status-error { color: var(--color-error); }
+.status-bar.status-warning { color: var(--color-warning); }
+.status-bar.status-success { color: var(--color-success); }
+
+.status-indicator {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--color-success);
+  flex-shrink: 0;
+}
+.status-bar.status-error .status-indicator { background-color: var(--color-error); }
+.status-bar.status-warning .status-indicator { background-color: var(--color-warning); }
+
+/* Fehler-Dialog */
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.dialog-box {
+  background-color: var(--color-surface-raised);
+  border: 1px solid var(--color-error);
+  border-radius: 12px;
+  padding: 28px 32px;
+  max-width: 480px;
+  width: 90%;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+.dialog-box h3 {
+  color: var(--color-error);
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.dialog-box p {
+  color: var(--color-text-light);
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.dialog-close-btn {
+  padding: 9px 20px;
+  background-color: var(--color-primary-light);
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  color: var(--color-text-light);
+  cursor: pointer;
+  font-size: 14px;
+  font-family: inherit;
+  transition: background-color 0.15s;
+}
+
+.dialog-close-btn:hover {
+  background-color: var(--color-accent);
+}
