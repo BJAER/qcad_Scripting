@@ -37,7 +37,10 @@ export async function loadConfig(): Promise<Config> {
   try {
     const raw = await invoke<string>("read_text_file", { path: USER_CONFIG_PATH });
     const userConfig = JSON.parse(raw) as Partial<Config>;
-    return deepMerge(DEFAULT_CONFIG, userConfig);
+    return deepMerge(
+      DEFAULT_CONFIG as unknown as Record<string, unknown>,
+      userConfig as unknown as Record<string, unknown>
+    ) as unknown as Config;
   } catch {
     return { ...DEFAULT_CONFIG };
   }

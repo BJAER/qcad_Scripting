@@ -53,11 +53,12 @@ const REQUIRED_SUBFOLDERS = [
 ];
 
 export async function createProject(
-  metadata: ProjectMetadata
+  metadata: ProjectMetadata,
+  rootDir?: string
 ): Promise<ProjectResult> {
-  const config = await loadConfig();
+  const root = rootDir !== undefined ? rootDir : (await loadConfig()).projects.default_root;
 
-  if (!config.projects.default_root.trim()) {
+  if (!root.trim()) {
     const msg =
       "Kein Projektverzeichnis konfiguriert. Bitte lege in den Einstellungen einen Speicherort für Projekte fest.";
     return { ok: false, message: msg, errors: [msg] };
@@ -65,7 +66,7 @@ export async function createProject(
 
   const safeName = sanitizeName(metadata.project_name);
   const dirName = `Projekt_${metadata.project_number}_${safeName}`;
-  const projectPath = `${config.projects.default_root}/${dirName}`;
+  const projectPath = `${root}/${dirName}`;
 
   const project: Project = {
     project_id: metadata.project_number,

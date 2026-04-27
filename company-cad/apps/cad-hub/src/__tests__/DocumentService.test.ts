@@ -7,7 +7,8 @@ vi.mock("@tauri-apps/api/core", () => ({
 }));
 
 vi.mock("@tauri-apps/plugin-opener", () => ({
-  open: vi.fn(),
+  openUrl: vi.fn(),
+  openPath: vi.fn(),
 }));
 
 vi.mock("../services/LoggingService", () => ({
@@ -15,9 +16,10 @@ vi.mock("../services/LoggingService", () => ({
 }));
 
 import { invoke } from "@tauri-apps/api/core";
-import { open } from "@tauri-apps/plugin-opener";
+import { openUrl, openPath } from "@tauri-apps/plugin-opener";
 const mockInvoke = vi.mocked(invoke);
-const mockOpen = vi.mocked(open);
+const mockOpenUrl = vi.mocked(openUrl);
+const mockOpenPath = vi.mocked(openPath);
 
 const SAMPLE_DOCS: HubDocument[] = [
   { id: "qm-001", title: "Qualitätshandbuch", type: "url", category: "Qualität", url: "https://example.com/qm", tags: ["qualität", "handbuch"] },
@@ -80,10 +82,17 @@ describe("searchDocuments", () => {
 });
 
 describe("openDocument", () => {
-  it("öffnet URL-Dokument über Tauri opener", async () => {
-    mockOpen.mockResolvedValueOnce(undefined);
+  it("öffnet URL-Dokument über openUrl", async () => {
+    mockOpenUrl.mockResolvedValueOnce(undefined);
     await openDocument(SAMPLE_DOCS[0]);
-    expect(mockOpen).toHaveBeenCalledWith("https://example.com/qm");
+    expect(mockOpenUrl).toHaveBeenCalledWith("https://example.com/qm");
+  });
+
+  it("öffnet lokale Datei über openPath", async () => {
+    mockOpenPath.mockResolvedValueOnce(undefined);
+    const localDoc: HubDocument = { id: "x", title: "Lokal", type: "local_file", category: "Test", path: "/tmp/test.pdf" };
+    await openDocument(localDoc);
+    expect(mockOpenPath).toHaveBeenCalledWith("/tmp/test.pdf");
   });
 
   it("wirft verständlichen Fehler wenn URL fehlt", async () => {

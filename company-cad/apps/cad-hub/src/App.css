@@ -229,3 +229,169 @@ body {
 .dialog-close-btn:hover {
   background-color: var(--color-accent);
 }
+
+/* Dialog neutral (NewProject) */
+.dialog-box--neutral {
+  border-color: var(--color-border);
+}
+
+.dialog-box--neutral h3 {
+  color: var(--color-text-light);
+}
+
+/* Header nav + project badge */
+.header-nav {
+  margin-left: auto;
+}
+
+.nav-btn {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text-light);
+  cursor: pointer;
+  font-size: 13px;
+  font-family: inherit;
+  padding: 5px 12px;
+  transition: background-color 0.15s;
+}
+
+.nav-btn:hover {
+  background-color: var(--color-surface-raised);
+}
+
+.active-project-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  padding: 4px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Settings */
+.settings-section {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.settings-section h2 {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 24px;
+}
+
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.settings-fieldset {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settings-fieldset legend {
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.settings-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--color-text-light);
+}
+
+.settings-input {
+  background-color: var(--color-primary);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text-light);
+  font-family: inherit;
+  font-size: 14px;
+  padding: 8px 12px;
+  transition: border-color 0.15s;
+  outline: none;
+}
+
+.settings-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.settings-input:focus {
+  border-color: var(--color-accent);
+}
+
+.settings-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.form-field {
+  margin-bottom: 8px;
+}
+
+/* Primary / secondary buttons */
+.btn-primary {
+  padding: 9px 22px;
+  background-color: var(--color-accent);
+  border: 1px solid var(--color-accent-hover);
+  border-radius: 7px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: inherit;
+  font-weight: 500;
+  transition: background-color 0.15s;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--color-accent-hover);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  padding: 9px 20px;
+  background-color: var(--color-primary-light);
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  color: var(--color-text-light);
+  cursor: pointer;
+  font-size: 14px;
+  font-family: inherit;
+  transition: background-color 0.15s;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--color-surface-raised);
+}
+
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

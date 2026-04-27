@@ -1,123 +1,216 @@
+import { useState } from "react";
+import NewProjectDialog from "./NewProjectDialog";
+import { openProject } from "../services/ProjectManager";
+import { openInQCAD, openInFreeCAD } from "../services/ProcessLauncher";
+import { loadDocuments, openDocument } from "../services/DocumentService";
+import type { Config } from "../services/ConfigService";
+import type { Project } from "../services/ProjectManager";
+
+type StatusType = "idle" | "success" | "warning" | "error";
+type AppView = "start" | "settings";
+
 interface StartScreenProps {
-  onStatus: (message: string, type?: "idle" | "success" | "warning" | "error") => void;
+  config: Config;
+  currentProject: Project | null;
+  onProjectChanged: (project: Project | null) => void;
+  onNavigate: (view: AppView) => void;
+  onStatus: (message: string, type?: StatusType) => void;
   onError: (message: string) => void;
 }
 
-interface HubButton {
-  id: string;
-  label: string;
-  icon: string;
-  hint: string;
-  action: () => void | Promise<void>;
-}
+export default function StartScreen({
+  config,
+  currentProject,
+  onProjectChanged,
+  onNavigate,
+  onStatus,
+  onError,
+}: StartScreenProps) {
+  const [showNewProject, setShowNewProject] = useState(false);
 
-export default function StartScreen({ onStatus, onError }: StartScreenProps) {
-  function handleClick(btn: HubButton) {
-    return async () => {
-      try {
-        await btn.action();
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        onError(msg);
-      }
-    };
+  async function handleOpenProject() {
+    const path = prompt("Pfad zum Projektordner eingeben:");
+    if (!path) return;
+    try {
+      const project = await openProject(path.trim());
+      onProjectChanged(project);
+      onStatus(`Projekt „${project.project_name}" geladen.`, "success");
+    } catch (err) {
+      onError(err instanceof Error ? err.message : String(err));
+    }
   }
 
-  const buttons: HubButton[] = [
+  async function handleEdit2D() {
+    if (!currentProject) {
+      onStatus("Bitte zuerst ein Projekt öffnen oder anlegen.", "warning");
+      return;
+    }
+    const qcadFolder = `${currentProject.path}/${currentProject.paths.qcad_2d}`;
+    try {
+      const result = await openInQCAD(currentProject.path, qcadFolder);
+      if (!result.ok) {
+        onError(result.errors[0] ?? result.message);
+      } else {
+        onStatus(result.message, "success");
+      }
+    } catch (err) {
+      onError(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  async function handleEdit3D() {
+    if (!currentProject) {
+      onStatus("Bitte zuerst ein Projekt öffnen oder anlegen.", "warning");
+      return;
+    }
+    const freecadFolder = `${currentProject.path}/${currentProject.paths.freecad_3d}`;
+    try {
+      const result = await openInFreeCAD(currentProject.path, freecadFolder);
+      if (!result.ok) {
+        onError(result.errors[0] ?? result.message);
+      } else {
+        onStatus(result.message, "success");
+      }
+    } catch (err) {
+      onError(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  async function handleQualityManual() {
+    const url = config.documents.quality_manual_url;
+    if (!url) {
+      onStatus("Qualitätshandbuch-Pfad nicht konfiguriert. Bitte Einstellungen öffnen.", "warning");
+      return;
+    }
+    try {
+      const docs = await loadDocuments(url);
+      if (docs.length > 0) {
+        await openDocument(docs[0]);
+        onStatus("Qualitätshandbuch wird geöffnet.", "success");
+      } else {
+        onStatus("Keine Dokumente gefunden.", "warning");
+      }
+    } catch (err) {
+      onError(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  async function handleWorkInstructions() {
+    const base = config.documents.work_instruction_base_url;
+    if (!base) {
+      onStatus("Arbeitsanweisungen nicht konfiguriert. Bitte Einstellungen öffnen.", "warning");
+      return;
+    }
+    try {
+      const docs = await loadDocuments(base);
+      if (docs.length > 0) {
+        await openDocument(docs[0]);
+        onStatus("Arbeitsanweisungen werden geöffnet.", "success");
+      } else {
+        onStatus("Keine Arbeitsanweisungen gefunden.", "warning");
+      }
+    } catch (err) {
+      onError(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  const buttons = [
     {
       id: "new-project",
       label: "Neues Projekt",
       icon: "📁",
-      hint: "Projektzordner und Struktur anlegen",
-      action: () => {
-        onStatus("Funktion 'Neues Projekt' wird in Schritt 4 implementiert.", "warning");
-      },
+      hint: "Projektordner und Struktur anlegen",
+      action: () => setShowNewProject(true),
     },
     {
       id: "open-project",
       label: "Projekt öffnen",
       icon: "📂",
       hint: "Bestehendes Projekt laden",
-      action: () => {
-        onStatus("Funktion 'Projekt öffnen' wird in Schritt 4 implementiert.", "warning");
-      },
+      action: handleOpenProject,
     },
     {
       id: "edit-2d",
       label: "2D-Zeichnung bearbeiten",
       icon: "📐",
-      hint: "Öffnet QCAD mit der Projektzeichnung",
-      action: () => {
-        onStatus("Funktion '2D-Zeichnung bearbeiten' wird in Schritt 5 implementiert.", "warning");
-      },
+      hint: currentProject ? `QCAD öffnen für „${currentProject.project_name}"` : "Öffnet QCAD mit der Projektzeichnung",
+      action: handleEdit2D,
     },
     {
       id: "edit-3d",
       label: "3D-Modell bearbeiten",
       icon: "🔷",
-      hint: "Öffnet FreeCAD mit dem Projektmodell",
-      action: () => {
-        onStatus("Funktion '3D-Modell bearbeiten' wird in Schritt 5 implementiert.", "warning");
-      },
+      hint: currentProject ? `FreeCAD öffnen für „${currentProject.project_name}"` : "Öffnet FreeCAD mit dem Projektmodell",
+      action: handleEdit3D,
     },
     {
       id: "quality-manual",
       label: "Qualitätshandbuch",
       icon: "📋",
       hint: "Qualitätsdokumente anzeigen",
-      action: () => {
-        onStatus("Funktion 'Qualitätshandbuch' wird in Schritt 6 implementiert.", "warning");
-      },
+      action: handleQualityManual,
     },
     {
       id: "work-instructions",
       label: "Arbeitsanweisungen",
       icon: "📝",
       hint: "Anweisungen für CAD-Aufgaben",
-      action: () => {
-        onStatus("Funktion 'Arbeitsanweisungen' wird in Schritt 6 implementiert.", "warning");
-      },
+      action: handleWorkInstructions,
     },
     {
       id: "settings",
       label: "Einstellungen",
       icon: "⚙️",
-      hint: "Programmpfade und Branding konfigurieren",
-      action: () => {
-        onStatus("Einstellungen werden in einem späteren Schritt implementiert.", "warning");
-      },
+      hint: "Programmpfade und Dokumente konfigurieren",
+      action: () => onNavigate("settings"),
     },
     {
       id: "about",
       label: "App-Info / Über",
       icon: "ℹ️",
       hint: "Version und Lizenzinformationen",
-      action: () => {
-        onStatus("CompanyCAD Hub v0.1.0 – Tauri 2 + React", "success");
-      },
+      action: () => onStatus("CompanyCAD Hub v0.1.0 – Tauri 2 + React + Rust", "success"),
     },
   ];
 
   return (
-    <main className="app-main" aria-label="Startseite">
-      <section className="start-screen">
-        <h2>Was möchten Sie tun?</h2>
-        <div className="button-grid" role="list">
-          {buttons.map((btn) => (
-            <button
-              key={btn.id}
-              className="hub-button"
-              onClick={handleClick(btn)}
-              aria-label={btn.label}
-              role="listitem"
-            >
-              <span className="button-icon" aria-hidden="true">{btn.icon}</span>
-              <span className="button-label">{btn.label}</span>
-              <span className="button-hint">{btn.hint}</span>
-            </button>
-          ))}
-        </div>
-      </section>
-    </main>
+    <>
+      <main className="app-main" aria-label="Startseite">
+        <section className="start-screen">
+          <h2>Was möchten Sie tun?</h2>
+          <div className="button-grid" role="list">
+            {buttons.map((btn) => (
+              <button
+                key={btn.id}
+                className="hub-button"
+                onClick={async () => {
+                  try {
+                    await btn.action();
+                  } catch (err) {
+                    onError(err instanceof Error ? err.message : String(err));
+                  }
+                }}
+                aria-label={btn.label}
+                role="listitem"
+              >
+                <span className="button-icon" aria-hidden="true">{btn.icon}</span>
+                <span className="button-label">{btn.label}</span>
+                <span className="button-hint">{btn.hint}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      </main>
+
+      {showNewProject && (
+        <NewProjectDialog
+          config={config}
+          onCreated={(project) => onProjectChanged(project)}
+          onClose={() => setShowNewProject(false)}
+          onStatus={onStatus}
+          onError={onError}
+        />
+      )}
+    </>
   );
 }

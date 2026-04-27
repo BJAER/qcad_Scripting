@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { open } from "@tauri-apps/plugin-opener";
+import { openUrl, openPath } from "@tauri-apps/plugin-opener";
 import { writeLog } from "./LoggingService";
 
 export interface HubDocument {
@@ -37,7 +37,11 @@ export async function openDocument(doc: HubDocument): Promise<void> {
   }
 
   try {
-    await open(target);
+    if (doc.type === "url") {
+      await openUrl(target);
+    } else {
+      await openPath(target);
+    }
     await writeLog({
       action: "document_opened",
       project_id: "",

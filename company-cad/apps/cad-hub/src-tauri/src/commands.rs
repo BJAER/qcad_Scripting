@@ -3,6 +3,16 @@ use std::io::Write;
 use std::path::Path;
 use std::process::Command;
 
+// Expandiert ~ zum tatsächlichen Home-Verzeichnis
+fn expand_tilde(path: &str) -> String {
+    if path.starts_with("~/") || path == "~" {
+        if let Some(home) = dirs::home_dir() {
+            return home.join(path.trim_start_matches("~/")).to_string_lossy().into_owned();
+        }
+    }
+    path.to_string()
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LaunchResult {
     pub pid: Option<u32>,
@@ -21,31 +31,29 @@ pub struct LogEntry {
     pub errors: Vec<String>,
 }
 
-/// Startet ein externes Programm (QCAD oder FreeCAD) als fire-and-forget Prozess.
 #[tauri::command]
 pub fn launch_tool(
     executable: String,
     file_path: Option<String>,
     args: Vec<String>,
 ) -> Result<LaunchResult, String> {
-    if !Path::new(&executable).exists() {
+    let exe = expand_tilde(&executable);
+    if !Path::new(&exe).exists() {
         return Err(format!(
             "Das Programm wurde nicht gefunden: {}. Bitte prüfe den Pfad in den Einstellungen.",
-            executable
+            exe
         ));
     }
-
-    let mut cmd = Command::new(&executable);
+    let mut cmd = Command::new(&exe);
     cmd.args(&args);
-    if let Some(ref path) = file_path {
-        cmd.arg(path);
+    if let Some(ref p) = file_path {
+        cmd.arg(expand_tilde(p));
     }
-
     match cmd.spawn() {
         Ok(child) => Ok(LaunchResult {
             pid: Some(child.id()),
             launched: true,
-            message: format!("Programm gestartet: {}", executable),
+            message: format!("Programm gestartet: {}", exe),
         }),
         Err(e) => Err(format!(
             "Das Programm konnte nicht gestartet werden. Bitte prüfe den Pfad in den Einstellungen. ({})",
@@ -54,92 +62,81 @@ pub fn launch_tool(
     }
 }
 
-/// Liest eine Textdatei vom Dateisystem.
 #[tauri::command]
 pub fn read_text_file(path: String) -> Result<String, String> {
-    std::fs::read_to_string(&path).map_err(|e| match e.kind() {
-        std::io::ErrorKind::NotFound => {
-            format!("Datei nicht gefunden: {}", path)
-        }
+    let p = expand_tilde(&path);
+    std::fs::read_to_string(&p).map_err(|e| match e.kind() {
+        std::io::ErrorKind::NotFound => format!("Datei nicht gefunden: {}", p),
         std::io::ErrorKind::PermissionDenied => {
-            format!("Zugriff verweigert: {}. Bitte prüfe die Dateiberechtigungen.", path)
+            format!("Zugriff verweigert: {}. Bitte prüfe die Dateiberechtigungen.", p)
         }
-        _ => format!("Datei konnte nicht gelesen werden: {} ({})", path, e),
+        _ => format!("Datei konnte nicht gelesen werden: {} ({})", p, e),
     })
 }
 
-/// Schreibt Text in eine Datei. Legt übergeordnete Verzeichnisse an falls nötig.
 #[tauri::command]
 pub fn write_text_file(path: String, content: String) -> Result<(), String> {
-    let p = Path::new(&path);
-    if let Some(parent) = p.parent() {
+    let p = expand_tilde(&path);
+    let path_obj = Path::new(&p);
+    if let Some(parent) = path_obj.parent() {
         std::fs::create_dir_all(parent).map_err(|e| {
             format!("Verzeichnis konnte nicht erstellt werden: {} ({})", parent.display(), e)
         })?;
     }
-    std::fs::write(&path, &content).map_err(|e| {
-        format!("Datei konnte nicht geschrieben werden: {} ({})", path, e)
-    })
+    std::fs::write(&p, &content)
+        .map_err(|e| format!("Datei konnte nicht geschrieben werden: {} ({})", p, e))
 }
 
-/// Legt ein Verzeichnis an (inkl. aller übergeordneten Verzeichnisse).
 #[tauri::command]
 pub fn create_directory(path: String) -> Result<(), String> {
-    std::fs::create_dir_all(&path)
-        .map_err(|e| format!("Verzeichnis konnte nicht erstellt werden: {} ({})", path, e))
+    let p = expand_tilde(&path);
+    std::fs::create_dir_all(&p)
+        .map_err(|e| format!("Verzeichnis konnte nicht erstellt werden: {} ({})", p, e))
 }
 
-/// Erstellt die vollständige Projektstruktur mit allen Unterordnern und der project.json.
 #[tauri::command]
 pub fn create_project_structure(
     project_path: String,
     subfolders: Vec<String>,
     manifest: String,
 ) -> Result<(), String> {
-    std::fs::create_dir_all(&project_path).map_err(|e| {
-        format!("Projektverzeichnis konnte nicht erstellt werden: {} ({})", project_path, e)
+    let p = expand_tilde(&project_path);
+    std::fs::create_dir_all(&p).map_err(|e| {
+        format!("Projektverzeichnis konnte nicht erstellt werden: {} ({})", p, e)
     })?;
-
     for subfolder in &subfolders {
-        let full_path = format!("{}/{}", project_path, subfolder);
-        std::fs::create_dir_all(&full_path).map_err(|e| {
-            format!("Unterordner konnte nicht erstellt werden: {} ({})", full_path, e)
+        let full = format!("{}/{}", p, subfolder);
+        std::fs::create_dir_all(&full).map_err(|e| {
+            format!("Unterordner konnte nicht erstellt werden: {} ({})", full, e)
         })?;
     }
-
-    let manifest_path = format!("{}/project.json", project_path);
+    let manifest_path = format!("{}/project.json", p);
     std::fs::write(&manifest_path, &manifest).map_err(|e| {
         format!("project.json konnte nicht geschrieben werden: {} ({})", manifest_path, e)
-    })?;
-
-    Ok(())
+    })
 }
 
-/// Prüft ob ein Pfad (Datei oder Verzeichnis) existiert.
 #[tauri::command]
 pub fn check_path(path: String) -> bool {
-    Path::new(&path).exists()
+    Path::new(&expand_tilde(&path)).exists()
 }
 
-/// Schreibt einen Logeintrag als JSON-Zeile an hub_log.jsonl.
 #[tauri::command]
 pub fn write_log_entry(log_path: String, entry: LogEntry) -> Result<(), String> {
-    let p = Path::new(&log_path);
-    if let Some(parent) = p.parent() {
+    let p = expand_tilde(&log_path);
+    let path_obj = Path::new(&p);
+    if let Some(parent) = path_obj.parent() {
         std::fs::create_dir_all(parent).map_err(|e| {
             format!("Log-Verzeichnis konnte nicht erstellt werden: {} ({})", parent.display(), e)
         })?;
     }
-
     let mut file = std::fs::OpenOptions::new()
         .create(true)
         .append(true)
-        .open(&log_path)
-        .map_err(|e| format!("Log-Datei konnte nicht geöffnet werden: {} ({})", log_path, e))?;
-
+        .open(&p)
+        .map_err(|e| format!("Log-Datei konnte nicht geöffnet werden: {} ({})", p, e))?;
     let line = serde_json::to_string(&entry)
         .map_err(|e| format!("Log-Eintrag konnte nicht serialisiert werden: {}", e))?;
-
     writeln!(file, "{}", line)
         .map_err(|e| format!("Log-Eintrag konnte nicht geschrieben werden: {}", e))
 }
