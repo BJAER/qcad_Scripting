@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import NewProjectDialog from "./NewProjectDialog";
 import { openProject } from "../services/ProjectManager";
 import { openInQCAD, openInFreeCAD } from "../services/ProcessLauncher";
@@ -29,10 +30,12 @@ export default function StartScreen({
   const [showNewProject, setShowNewProject] = useState(false);
 
   async function handleOpenProject() {
-    const path = prompt("Pfad zum Projektordner eingeben:");
+    const selected = await openDialog({ directory: true, multiple: false, title: "Projektordner wählen" });
+    if (!selected) return;
+    const path = typeof selected === "string" ? selected : selected[0];
     if (!path) return;
     try {
-      const project = await openProject(path.trim());
+      const project = await openProject(path);
       onProjectChanged(project);
       onStatus(`Projekt „${project.project_name}" geladen.`, "success");
     } catch (err) {

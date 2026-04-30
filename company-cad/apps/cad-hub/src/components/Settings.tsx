@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { saveConfig, type Config } from "../services/ConfigService";
 
 interface SettingsProps {
@@ -20,6 +21,16 @@ export default function Settings({ config, onSaved, onStatus, onError }: Setting
   }
   function setDocumentsField(field: keyof Config["documents"], value: string) {
     setForm((prev) => ({ ...prev, documents: { ...prev.documents, [field]: value } }));
+  }
+
+  async function pickFile(setter: (v: string) => void) {
+    const selected = await openDialog({ multiple: false, title: "Programm wählen" });
+    if (selected) setter(typeof selected === "string" ? selected : selected[0]);
+  }
+
+  async function pickDirectory(setter: (v: string) => void) {
+    const selected = await openDialog({ directory: true, multiple: false, title: "Ordner wählen" });
+    if (selected) setter(typeof selected === "string" ? selected : selected[0]);
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -46,23 +57,29 @@ export default function Settings({ config, onSaved, onStatus, onError }: Setting
             <legend>Programme</legend>
             <label className="settings-label">
               QCAD – Programmpfad
-              <input
-                className="settings-input"
-                type="text"
-                value={form.tools.qcad_executable}
-                onChange={(e) => setToolsField("qcad_executable", e.target.value)}
-                placeholder="/usr/bin/qcad"
-              />
+              <div className="input-with-browse">
+                <input
+                  className="settings-input"
+                  type="text"
+                  value={form.tools.qcad_executable}
+                  onChange={(e) => setToolsField("qcad_executable", e.target.value)}
+                  placeholder="/usr/bin/qcad"
+                />
+                <button type="button" className="btn-browse" onClick={() => pickFile((v) => setToolsField("qcad_executable", v))}>…</button>
+              </div>
             </label>
             <label className="settings-label">
               FreeCAD – Programmpfad
-              <input
-                className="settings-input"
-                type="text"
-                value={form.tools.freecad_executable}
-                onChange={(e) => setToolsField("freecad_executable", e.target.value)}
-                placeholder="/usr/bin/freecad"
-              />
+              <div className="input-with-browse">
+                <input
+                  className="settings-input"
+                  type="text"
+                  value={form.tools.freecad_executable}
+                  onChange={(e) => setToolsField("freecad_executable", e.target.value)}
+                  placeholder="/usr/bin/freecad"
+                />
+                <button type="button" className="btn-browse" onClick={() => pickFile((v) => setToolsField("freecad_executable", v))}>…</button>
+              </div>
             </label>
           </fieldset>
 
@@ -70,13 +87,16 @@ export default function Settings({ config, onSaved, onStatus, onError }: Setting
             <legend>Projekte</legend>
             <label className="settings-label">
               Stammverzeichnis für Projekte
-              <input
-                className="settings-input"
-                type="text"
-                value={form.projects.default_root}
-                onChange={(e) => setProjectsField("default_root", e.target.value)}
-                placeholder="~/Projekte"
-              />
+              <div className="input-with-browse">
+                <input
+                  className="settings-input"
+                  type="text"
+                  value={form.projects.default_root}
+                  onChange={(e) => setProjectsField("default_root", e.target.value)}
+                  placeholder="~/Projekte"
+                />
+                <button type="button" className="btn-browse" onClick={() => pickDirectory((v) => setProjectsField("default_root", v))}>…</button>
+              </div>
             </label>
           </fieldset>
 
