@@ -3,12 +3,11 @@ import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import NewProjectDialog from "./NewProjectDialog";
 import { openProject } from "../services/ProjectManager";
 import { openInQCAD, openInFreeCAD } from "../services/ProcessLauncher";
-import { loadDocuments, openDocument } from "../services/DocumentService";
 import type { Config } from "../services/ConfigService";
 import type { Project } from "../services/ProjectManager";
 
 type StatusType = "idle" | "success" | "warning" | "error";
-type AppView = "start" | "settings";
+type AppView = "start" | "settings" | "documents";
 
 interface StartScreenProps {
   config: Config;
@@ -79,42 +78,13 @@ export default function StartScreen({
     }
   }
 
-  async function handleQualityManual() {
-    const url = config.documents.quality_manual_url;
-    if (!url) {
-      onStatus("Qualitätshandbuch-Pfad nicht konfiguriert. Bitte Einstellungen öffnen.", "warning");
+  function handleDocuments() {
+    const hasAny = config.documents.quality_manual_url || config.documents.work_instruction_base_url;
+    if (!hasAny) {
+      onStatus("Kein Dokumentenpfad konfiguriert. Bitte Einstellungen öffnen.", "warning");
       return;
     }
-    try {
-      const docs = await loadDocuments(url);
-      if (docs.length > 0) {
-        await openDocument(docs[0]);
-        onStatus("Qualitätshandbuch wird geöffnet.", "success");
-      } else {
-        onStatus("Keine Dokumente gefunden.", "warning");
-      }
-    } catch (err) {
-      onError(err instanceof Error ? err.message : String(err));
-    }
-  }
-
-  async function handleWorkInstructions() {
-    const base = config.documents.work_instruction_base_url;
-    if (!base) {
-      onStatus("Arbeitsanweisungen nicht konfiguriert. Bitte Einstellungen öffnen.", "warning");
-      return;
-    }
-    try {
-      const docs = await loadDocuments(base);
-      if (docs.length > 0) {
-        await openDocument(docs[0]);
-        onStatus("Arbeitsanweisungen werden geöffnet.", "success");
-      } else {
-        onStatus("Keine Arbeitsanweisungen gefunden.", "warning");
-      }
-    } catch (err) {
-      onError(err instanceof Error ? err.message : String(err));
-    }
+    onNavigate("documents");
   }
 
   const buttons = [
@@ -150,15 +120,15 @@ export default function StartScreen({
       id: "quality-manual",
       label: "Qualitätshandbuch",
       icon: "📋",
-      hint: "Qualitätsdokumente anzeigen",
-      action: handleQualityManual,
+      hint: "Qualitätsdokumente durchsuchen und öffnen",
+      action: handleDocuments,
     },
     {
       id: "work-instructions",
       label: "Arbeitsanweisungen",
       icon: "📝",
       hint: "Anweisungen für CAD-Aufgaben",
-      action: handleWorkInstructions,
+      action: handleDocuments,
     },
     {
       id: "settings",

@@ -422,3 +422,92 @@ body {
   background-color: var(--color-surface-raised);
   color: var(--color-text-light);
 }
+
+/* Documents View */
+.docs-section {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.docs-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.docs-header h2 {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  flex-shrink: 0;
+}
+
+.docs-search {
+  flex: 1;
+  max-width: 320px;
+}
+
+.docs-empty {
+  color: var(--color-text-muted);
+  font-size: 14px;
+  padding: 32px 0;
+  text-align: center;
+}
+
+.docs-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.docs-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background-color: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  transition: border-color 0.15s;
+}
+
+.docs-item:hover {
+  border-color: var(--color-accent);
+}
+
+.docs-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.docs-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.docs-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-light);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.docs-category {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.docs-open-btn {
+  flex-shrink: 0;
+  padding: 6px 16px;
+  font-size: 13px;
+}

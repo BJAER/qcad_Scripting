@@ -3,6 +3,7 @@ import StartScreen from "./components/StartScreen";
 import StatusBar from "./components/StatusBar";
 import ErrorDialog from "./components/ErrorDialog";
 import Settings from "./components/Settings";
+import DocumentsView from "./components/DocumentsView";
 import logoPlaceholder from "./assets/logo-placeholder.svg";
 import { loadConfig, validateConfig, type Config } from "./services/ConfigService";
 import { DEFAULT_CONFIG } from "./config/defaults";
@@ -10,7 +11,7 @@ import { writeLog } from "./services/LoggingService";
 import type { Project } from "./services/ProjectManager";
 
 type StatusType = "idle" | "success" | "warning" | "error";
-type AppView = "start" | "settings";
+type AppView = "start" | "settings" | "documents";
 
 export default function App() {
   const [config, setConfig] = useState<Config>(DEFAULT_CONFIG);
@@ -80,6 +81,12 @@ export default function App() {
         <Settings
           config={config}
           onSaved={handleConfigSaved}
+          onStatus={handleStatus}
+          onError={handleError}
+        />
+      ) : view === "documents" ? (
+        <DocumentsView
+          config={config}
           onStatus={handleStatus}
           onError={handleError}
         />
