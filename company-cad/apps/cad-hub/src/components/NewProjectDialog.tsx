@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createProject, type ProjectMetadata } from "../services/ProjectManager";
 import type { Config } from "../services/ConfigService";
 import type { Project } from "../services/ProjectManager";
@@ -18,6 +18,14 @@ export default function NewProjectDialog({ config, onCreated, onClose, onStatus,
     project_number: "",
   });
   const [creating, setCreating] = useState(false);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape" && !creating) onClose();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose, creating]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

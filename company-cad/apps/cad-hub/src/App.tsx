@@ -5,7 +5,14 @@ import ErrorDialog from "./components/ErrorDialog";
 import Settings from "./components/Settings";
 import DocumentsView from "./components/DocumentsView";
 import logoPlaceholder from "./assets/logo-placeholder.svg";
-import { loadConfig, validateConfig, type Config } from "./services/ConfigService";
+import {
+  loadConfig,
+  saveConfig,
+  validateConfig,
+  addRecentToConfig,
+  removeRecentFromConfig,
+  type Config,
+} from "./services/ConfigService";
 import { DEFAULT_CONFIG } from "./config/defaults";
 import { writeLog } from "./services/LoggingService";
 import type { Project } from "./services/ProjectManager";
@@ -60,6 +67,27 @@ export default function App() {
     handleStatus("Einstellungen gespeichert.", "success");
   }
 
+  const handleProjectChanged = useCallback(
+    (project: Project | null) => {
+      setCurrentProject(project);
+      if (!project) return;
+      setConfig((prev) => {
+        const next = addRecentToConfig(prev, project.path);
+        saveConfig(next).catch(() => {/* recents nicht kritisch */});
+        return next;
+      });
+    },
+    []
+  );
+
+  const handleRecentRemoved = useCallback((projectPath: string) => {
+    setConfig((prev) => {
+      const next = removeRecentFromConfig(prev, projectPath);
+      saveConfig(next).catch(() => {/* recents nicht kritisch */});
+      return next;
+    });
+  }, []);
+
   return (
     <div className="app-container">
       <header className="app-header">
@@ -94,7 +122,8 @@ export default function App() {
         <StartScreen
           config={config}
           currentProject={currentProject}
-          onProjectChanged={setCurrentProject}
+          onProjectChanged={handleProjectChanged}
+          onRecentRemoved={handleRecentRemoved}
           onNavigate={setView}
           onStatus={handleStatus}
           onError={handleError}

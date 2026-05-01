@@ -22,4 +22,5 @@ export const DEFAULT_CONFIG: Config = {
   projects: {
     default_root: "",
   },
+  recent_projects: [],
 };

@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { loadConfig, validateConfig } from "../services/ConfigService";
+import {
+  loadConfig,
+  validateConfig,
+  addRecentToConfig,
+  removeRecentFromConfig,
+} from "../services/ConfigService";
 import { DEFAULT_CONFIG } from "../config/defaults";
 
 vi.mock("@tauri-apps/api/core", () => ({
@@ -92,5 +97,42 @@ describe("validateConfig", () => {
     expect(result.valid).toBe(true);
     expect(result.warnings.length).toBeGreaterThan(0);
     expect(result.errors).toHaveLength(0);
+  });
+});
+
+describe("addRecentToConfig", () => {
+  it("fügt einen neuen Pfad an den Anfang der Liste hinzu", () => {
+    const updated = addRecentToConfig(DEFAULT_CONFIG, "/tmp/projektA");
+    expect(updated.recent_projects).toEqual(["/tmp/projektA"]);
+  });
+
+  it("entfernt Duplikate und schiebt vorhandenen Eintrag nach vorne", () => {
+    const base = { ...DEFAULT_CONFIG, recent_projects: ["/tmp/a", "/tmp/b", "/tmp/c"] };
+    const updated = addRecentToConfig(base, "/tmp/b");
+    expect(updated.recent_projects).toEqual(["/tmp/b", "/tmp/a", "/tmp/c"]);
+  });
+
+  it("begrenzt die Liste auf maximal 5 Einträge", () => {
+    const base = {
+      ...DEFAULT_CONFIG,
+      recent_projects: ["/p1", "/p2", "/p3", "/p4", "/p5"],
+    };
+    const updated = addRecentToConfig(base, "/p6");
+    expect(updated.recent_projects).toEqual(["/p6", "/p1", "/p2", "/p3", "/p4"]);
+    expect(updated.recent_projects).toHaveLength(5);
+  });
+});
+
+describe("removeRecentFromConfig", () => {
+  it("entfernt einen vorhandenen Pfad", () => {
+    const base = { ...DEFAULT_CONFIG, recent_projects: ["/tmp/a", "/tmp/b"] };
+    const updated = removeRecentFromConfig(base, "/tmp/a");
+    expect(updated.recent_projects).toEqual(["/tmp/b"]);
+  });
+
+  it("ist ein No-Op wenn der Pfad nicht in der Liste ist", () => {
+    const base = { ...DEFAULT_CONFIG, recent_projects: ["/tmp/a"] };
+    const updated = removeRecentFromConfig(base, "/tmp/x");
+    expect(updated.recent_projects).toEqual(["/tmp/a"]);
   });
 });

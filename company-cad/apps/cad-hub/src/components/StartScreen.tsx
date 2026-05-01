@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import NewProjectDialog from "./NewProjectDialog";
+import AboutDialog from "./AboutDialog";
 import { openProject } from "../services/ProjectManager";
 import { openInQCAD, openInFreeCAD } from "../services/ProcessLauncher";
 import type { Config } from "../services/ConfigService";
@@ -13,6 +14,7 @@ interface StartScreenProps {
   config: Config;
   currentProject: Project | null;
   onProjectChanged: (project: Project | null) => void;
+  onRecentRemoved: (projectPath: string) => void;
   onNavigate: (view: AppView) => void;
   onStatus: (message: string, type?: StatusType) => void;
   onError: (message: string) => void;
@@ -22,17 +24,28 @@ export default function StartScreen({
   config,
   currentProject,
   onProjectChanged,
+  onRecentRemoved,
   onNavigate,
   onStatus,
   onError,
 }: StartScreenProps) {
   const [showNewProject, setShowNewProject] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
 
-  async function handleOpenProject() {
-    const selected = await openDialog({ directory: true, multiple: false, title: "Projektordner wählen" });
-    if (!selected) return;
-    const path = typeof selected === "string" ? selected : selected[0];
-    if (!path) return;
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null;
+      const inForm = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA");
+      if (e.ctrlKey && e.key.toLowerCase() === "n" && !inForm) {
+        e.preventDefault();
+        setShowNewProject(true);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  async function loadProjectFromPath(path: string) {
     try {
       const project = await openProject(path);
       onProjectChanged(project);
@@ -40,6 +53,19 @@ export default function StartScreen({
     } catch (err) {
       onError(err instanceof Error ? err.message : String(err));
     }
+  }
+
+  async function handleOpenProject() {
+    const selected = await openDialog({ directory: true, multiple: false, title: "Projektordner wählen" });
+    if (!selected) return;
+    const path = typeof selected === "string" ? selected : selected[0];
+    if (!path) return;
+    await loadProjectFromPath(path);
+  }
+
+  function handleRecentRemove(e: React.MouseEvent, path: string) {
+    e.stopPropagation();
+    onRecentRemoved(path);
   }
 
   async function handleEdit2D() {
@@ -142,13 +168,46 @@ export default function StartScreen({
       label: "App-Info / Über",
       icon: "ℹ️",
       hint: "Version und Lizenzinformationen",
-      action: () => onStatus("CompanyCAD Hub v0.1.0 – Tauri 2 + React + Rust", "success"),
+      action: () => setShowAbout(true),
     },
   ];
+
+  const recents = config.recent_projects ?? [];
 
   return (
     <>
       <main className="app-main" aria-label="Startseite">
+        {recents.length > 0 && (
+          <section className="recent-projects" aria-label="Zuletzt verwendete Projekte">
+            <h2>Zuletzt verwendet</h2>
+            <ul className="recent-list" role="list">
+              {recents.map((path) => {
+                const name = path.split("/").pop() ?? path;
+                return (
+                  <li key={path} className="recent-item">
+                    <button
+                      className="recent-open"
+                      onClick={() => loadProjectFromPath(path)}
+                      title={path}
+                    >
+                      <span className="recent-icon" aria-hidden="true">📂</span>
+                      <span className="recent-name">{name}</span>
+                      <span className="recent-path">{path}</span>
+                    </button>
+                    <button
+                      className="recent-remove"
+                      onClick={(e) => handleRecentRemove(e, path)}
+                      aria-label={`„${name}" aus der Liste entfernen`}
+                      title="Aus der Liste entfernen"
+                    >
+                      ✕
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
         <section className="start-screen">
           <h2>Was möchten Sie tun?</h2>
           <div className="button-grid" role="list">
@@ -182,6 +241,13 @@ export default function StartScreen({
           onClose={() => setShowNewProject(false)}
           onStatus={onStatus}
           onError={onError}
+        />
+      )}
+      {showAbout && (
+        <AboutDialog
+          appName={config.app.name}
+          version={config.app.version}
+          onClose={() => setShowAbout(false)}
         />
       )}
     </>

@@ -23,7 +23,10 @@ export interface Config {
   projects: {
     default_root: string;
   };
+  recent_projects?: string[];
 }
+
+const RECENT_PROJECTS_LIMIT = 5;
 
 export interface ValidationResult {
   valid: boolean;
@@ -49,6 +52,17 @@ export async function loadConfig(): Promise<Config> {
 export async function saveConfig(config: Config): Promise<void> {
   const content = JSON.stringify(config, null, 2);
   await invoke<void>("write_text_file", { path: USER_CONFIG_PATH, content });
+}
+
+export function addRecentToConfig(config: Config, projectPath: string): Config {
+  const list = config.recent_projects ?? [];
+  const filtered = list.filter((p) => p !== projectPath);
+  return { ...config, recent_projects: [projectPath, ...filtered].slice(0, RECENT_PROJECTS_LIMIT) };
+}
+
+export function removeRecentFromConfig(config: Config, projectPath: string): Config {
+  const list = config.recent_projects ?? [];
+  return { ...config, recent_projects: list.filter((p) => p !== projectPath) };
 }
 
 export function validateConfig(config: Config): ValidationResult {

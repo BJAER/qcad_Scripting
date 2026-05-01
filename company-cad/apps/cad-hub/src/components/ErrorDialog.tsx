@@ -1,12 +1,18 @@
+import { useEffect } from "react";
+
 interface ErrorDialogProps {
   message: string;
   onClose: () => void;
 }
 
 export default function ErrorDialog({ message, onClose }: ErrorDialogProps) {
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Escape") onClose();
-  }
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
   return (
     <div
@@ -15,7 +21,6 @@ export default function ErrorDialog({ message, onClose }: ErrorDialogProps) {
       aria-modal="true"
       aria-label="Fehlermeldung"
       onClick={onClose}
-      onKeyDown={handleKeyDown}
     >
       <div
         className="dialog-box"

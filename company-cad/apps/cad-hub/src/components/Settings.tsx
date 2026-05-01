@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
+import { invoke } from "@tauri-apps/api/core";
 import { saveConfig, type Config } from "../services/ConfigService";
 
 interface SettingsProps {
@@ -33,12 +34,36 @@ export default function Settings({ config, onSaved, onStatus, onError }: Setting
     if (selected) setter(typeof selected === "string" ? selected : selected[0]);
   }
 
+  async function checkExists(path: string): Promise<boolean> {
+    if (!path.trim()) return true;
+    try {
+      return await invoke<boolean>("check_path", { path });
+    } catch {
+      return false;
+    }
+  }
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
     try {
       await saveConfig(form);
+      const [qcadOk, freecadOk, rootOk] = await Promise.all([
+        checkExists(form.tools.qcad_executable),
+        checkExists(form.tools.freecad_executable),
+        checkExists(form.projects.default_root),
+      ]);
+      const missing: string[] = [];
+      if (!qcadOk) missing.push("QCAD");
+      if (!freecadOk) missing.push("FreeCAD");
+      if (!rootOk) missing.push("Projektverzeichnis");
       onSaved(form);
+      if (missing.length > 0) {
+        onStatus(
+          `Einstellungen gespeichert, aber nicht erreichbar: ${missing.join(", ")}. Bitte Pfade prüfen.`,
+          "warning"
+        );
+      }
     } catch (err) {
       onError(err instanceof Error ? err.message : String(err));
       onStatus("Einstellungen konnten nicht gespeichert werden.", "error");
